@@ -1,8 +1,11 @@
 import subprocess
-import fcntl
 import select
 import os
+import sys
 import re
+
+if sys.platform <> "win32":
+    import fcntl
 
 from video_inspector import VideoInspector
 
@@ -10,7 +13,6 @@ from errors import CantOverwrite
 from errors import CommandError
 from errors import UnknownFormat
 from errors import UnreadableFile
-
 
 class VideoEncoder(object):
 
@@ -39,14 +41,15 @@ class VideoEncoder(object):
         }
         if progress_callback:
             cmd = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
-            fcntl.fcntl(
-                cmd.stderr.fileno(),
-                fcntl.F_SETFL,
+            if sys.platform <> "win32":            
                 fcntl.fcntl(
                     cmd.stderr.fileno(),
-                    fcntl.F_GETFL
-                ) | os.O_NONBLOCK,
-            )
+                    fcntl.F_SETFL,
+                    fcntl.fcntl(
+                        cmd.stderr.fileno(),
+                        fcntl.F_GETFL
+                    ) | os.O_NONBLOCK,
+                )
 
             duration = None
             header = ""

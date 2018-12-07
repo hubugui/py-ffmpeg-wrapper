@@ -1,5 +1,10 @@
+#!/usr/bin/env python
+#encoding: utf-8
+
 import os
 import re
+import subprocess
+import sys
 import commands
 
 from errors import CommandError
@@ -7,9 +12,7 @@ from errors import UnknownFormat
 from errors import UnreadableFile
 from errors import InputFileDoesNotExist
 
-
 class VideoInspector(object):
-
     _valid = False
 
     def __init__(self, video_source, ffmpeg_bin="ffmpeg"):
@@ -20,11 +23,14 @@ class VideoInspector(object):
         self.path = os.path.dirname(video_source)
         self.full_filename = video_source
 
-        self._exec_response = commands.getoutput("%s -i %s" % (
+        cmd = "%s -i %s" % (
             ffmpeg_bin,
             self.full_filename
-        ))
+        )
 
+        proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        self._exec_stdout, self._exec_response = proc.communicate()
+    
         if re.search(
             ".*command\snot\sfound",
             self._exec_response,
