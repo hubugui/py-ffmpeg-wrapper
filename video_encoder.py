@@ -15,11 +15,11 @@ from errors import UnknownFormat
 from errors import UnreadableFile
 
 class VideoEncoder(object):
-
     def __init__(self, video_source, ffmpeg_bin="ffmpeg"):
         self._ffmpeg_bin = ffmpeg_bin
         if not isinstance(video_source, VideoInspector):
-            self.original_file = VideoInspector(video_source, ffmpeg_bin)
+            self.original_file = VideoInspector()
+            self.original_file.setUp(video_source, ffmpeg_bin)
         else:
             self.original_file = video_source
 
@@ -41,7 +41,7 @@ class VideoEncoder(object):
         }
         if progress_callback:
             cmd = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
-            if sys.platform <> "win32":            
+            if sys.platform <> "win32":
                 fcntl.fcntl(
                     cmd.stderr.fileno(),
                     fcntl.F_SETFL,

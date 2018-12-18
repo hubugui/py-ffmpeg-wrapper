@@ -13,24 +13,24 @@ from errors import UnreadableFile
 from errors import InputFileDoesNotExist
 
 class VideoInspector(object):
-    _valid = False
+    def __init__(self):
+        self._valid = False
 
-    def __init__(self, video_source, ffmpeg_bin="ffmpeg"):
-        if not os.path.exists(video_source):
-            raise InputFileDoesNotExist()
-
+    def setUp(self, video_source, ffmpeg_bin="ffmpeg"):
         self.filename = os.path.basename(video_source)
         self.path = os.path.dirname(video_source)
         self.full_filename = video_source
+        if not os.path.exists(self.full_filename):
+            raise InputFileDoesNotExist()
 
-        cmd = "%s -i %s" % (
+        self._cmd = "%s -i %s" % (
             ffmpeg_bin,
             self.full_filename
         )
 
-        proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(self._cmd, stderr=subprocess.PIPE, shell=True)
         self._exec_stdout, self._exec_response = proc.communicate()
-    
+
         if re.search(
             ".*command\snot\sfound",
             self._exec_response,
@@ -124,6 +124,9 @@ class VideoInspector(object):
         if not self._valid:
             return
         return re.search("([0-9\.]+) (fps|tb)", self._exec_response).group(1)
+
+    def fps_round(self):
+        return round(float(self.fps()))
 
     def video_stream(self):
         m = re.search("\n\s*Stream.*Video:.*\n", self._exec_response)

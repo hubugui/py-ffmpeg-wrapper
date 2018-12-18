@@ -3,6 +3,7 @@
 
 import unittest
 import os
+import sys
 import time
 
 from video_inspector import VideoInspector
@@ -10,7 +11,8 @@ from video_encoder import VideoEncoder
 
 class TestInspector(unittest.TestCase):
     def setUp(self):
-        self._inspector = VideoInspector("input.mp4")
+        self._inspector = VideoInspector()
+        self._inspector.setUp("input.mp4")
 
     def testContainer(self):
         self.assertEquals(
@@ -41,13 +43,13 @@ class TestInspector(unittest.TestCase):
         self.assertTrue(codec is not None)
 
     def testRawDuration(self):
-        self.assertEquals(self._inspector.raw_duration(), "00:02:22.70")
+        self.assertEquals(self._inspector.raw_duration(), "00:00:10.08")
 
     def testDuration(self):
-        self.assertEquals(self._inspector.duration(), 142700)
+        self.assertEquals(self._inspector.duration(), 10080)
 
     def testFPS(self):
-        self.assertEquals(self._inspector.fps(), '24')
+        self.assertEquals(self._inspector.fps_round(), 30)
 
 class TestEncoder(unittest.TestCase):
     def setUp(self):
