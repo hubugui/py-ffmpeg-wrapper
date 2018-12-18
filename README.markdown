@@ -29,3 +29,20 @@ subprocess' shell argument set to True. This could lead to bad things (shell inj
         print_progress,
         encoding_complete
     )
+
+## Sample usage (VideoRtspInspector)
+
+ffmpeg execute command with subprocess' shell argument set to False.
+
+    from video_rtsp_inspector import VideoRtspInspector
+
+    video = VideoRtspInspector()
+    video.setUp(RTSP_TRANSPORT, RTSP_URL, OUTPUT)
+    if video.waitReady(5) == False:
+        print("please confirm '{}' is ready!".format(self.RTSP_URL))
+    else:
+        print(video.fps_round())
+
+## Test usage (VideoRtspInspector)
+
+    python test_rtsp.py tcp rtsp://192.168.5.8 udp://localhost:8888

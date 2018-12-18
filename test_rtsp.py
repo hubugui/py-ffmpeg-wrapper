@@ -10,7 +10,7 @@ from video_rtsp_inspector import VideoRtspInspector
 
 class TestRtsp(unittest.TestCase):
     RTSP_TRANSPORT = "tcp"
-    RTSP_URL = "rtsp://admin:trkj88888@192.168.5.234"
+    RTSP_URL = "rtsp://192.168.5.188"
     OUTPUT = "udp://238.238.238.238:8888"
 
     def setUp(self):
