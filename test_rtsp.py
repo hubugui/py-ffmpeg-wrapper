@@ -23,6 +23,7 @@ class TestRtsp(unittest.TestCase):
         self._inspector.tearDown()
 
     def testLive(self):
+        print(self._inspector.fps_round())
         self.assertTrue(self._inspector.fps_round() > 0)
 
 if __name__ == "__main__":
