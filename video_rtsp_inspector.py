@@ -44,26 +44,31 @@ class VideoRtspInspector(VideoInspector):
             return False
 
     def thread_func(self, cmd):
-        while self.m_running:            
+        while self.m_running:
             try:
                 if self.m_proc is None:
-                    self.m_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE
+                    self.m_proc = subprocess.Popen(cmd
+                                                    , stdout=subprocess.PIPE
                                                     , stderr=subprocess.STDOUT
                                                     , shell=False, bufsize=1
                                                     , universal_newlines=True)
                     self.m_pid = None if self.m_proc is None else self.m_proc.pid
                 else:
                     # here maybe block, so tearDown() call terminate()
-                    chr = self.m_proc.stdout.read(1)
-                    if chr == '' and self.m_proc.poll() != None:
-                        break
+                    try:
+                        chr = self.m_proc.stdout.read(1)
+                        if chr == '' and self.m_proc.poll() != None:
+                            print("break")
+                            break
+                    except:
+                        None
                     self.m_output.append(chr)
                     if chr == '\n':
                         output = ''.join(self.m_output)
                         if "Press [q] to stop" in output and self.analyze(output):
                             break
             except Exception as err:
-                # print("command:{}, Error:{}".format(cmd, err))
+                print("command:{}, Error:{}".format(cmd, err))
                 pass
 
         # wakeup
@@ -76,11 +81,16 @@ class VideoRtspInspector(VideoInspector):
         self.m_readyEvent = threading.Event()
         self.m_output = []
 
-    def setUp(self, rtsp_transport, video_source, output, ffmpeg_bin="ffmpeg"):
-        cmd = "%s -rtsp_transport %s -i %s -codec copy -an -f h264 %s " % (
+    def getSource(self):
+        return self.m_source
+
+    def setUp(self, rtsp_transport, video_source, format, output, ffmpeg_bin="ffmpeg"):
+        self.m_source = video_source
+        cmd = "%s -rtsp_transport %s -i %s -codec copy -f %s %s " % (
             ffmpeg_bin,
             rtsp_transport,
             video_source,
+            format,
             output
         )
 
@@ -93,4 +103,3 @@ class VideoRtspInspector(VideoInspector):
         if self.m_proc is not None:
             self.m_proc.terminate()
             self.m_pid = self.m_proc = None
-        self.m_thread.join()

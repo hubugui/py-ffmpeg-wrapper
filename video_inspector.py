@@ -126,7 +126,11 @@ class VideoInspector(object):
         return re.search("([0-9\.]+) (fps|tb)", self._exec_response).group(1)
 
     def fps_round(self):
-        return round(float(self.fps()))
+        fps = self.fps()
+        if fps is not None:
+            return round(float(self.fps()))
+        else:
+            return 0
 
     def video_stream(self):
         m = re.search("\n\s*Stream.*Video:.*\n", self._exec_response)
