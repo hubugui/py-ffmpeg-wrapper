@@ -18,6 +18,12 @@ from errors import InputFileDoesNotExist
 from video_inspector import VideoInspector
 
 class VideoRtspInspector(VideoInspector):
+    def setUserdata(self, userdata):
+        self.m_userdata = userdata
+
+    def getUserdata(self):
+        return self.m_userdata
+
     def waitReady(self, seconds):
         return self.m_readyEvent.wait(seconds)
 
@@ -57,15 +63,14 @@ class VideoRtspInspector(VideoInspector):
                     # here maybe block, so tearDown() call terminate()
                     try:
                         chr = self.m_proc.stdout.read(1)
-                        if chr == '' and self.m_proc.poll() != None:
-                            print("break")
+                        if chr == '' and self.m_proc.poll() != None:                            
                             break
                     except:
                         None
                     self.m_output.append(chr)
-                    if chr == '\n':
+                    if chr == '\n':                        
                         output = ''.join(self.m_output)
-                        if "Press [q] to stop" in output and self.analyze(output):
+                        if "Press [q] to stop" in output and self.analyze(output):                            
                             break
             except Exception as err:
                 print("command:{}, Error:{}".format(cmd, err))

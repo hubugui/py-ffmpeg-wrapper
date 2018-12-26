@@ -123,7 +123,10 @@ class VideoInspector(object):
     def fps(self):
         if not self._valid:
             return
-        return re.search("([0-9\.]+) (fps|tb)", self._exec_response).group(1)
+        try:
+            return re.search("([0-9\.]+) (fps|tb)", self._exec_response).group(1)
+        except:
+            return "0.0"
 
     def fps_round(self):
         fps = self.fps()
@@ -174,12 +177,12 @@ class VideoInspector(object):
 
     def width(self):
         if not self._valid:
-            return
+            return 0
         return int(self._video_match().group(4))
 
     def height(self):
         if not self._valid:
-            return
+            return 0
         return int(self._video_match().group(5))
 
     def resolution(self):
