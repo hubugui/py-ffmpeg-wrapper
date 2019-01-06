@@ -38,18 +38,19 @@ class VideoRtspInspector(VideoInspector):
                 raise CommandError()
 
             self._metadata = re.search(
-                "(Input \#.*)\n(Press \[q\] to stop)",
+                "(Input \#.*)\n",
                 self._exec_response,
                 flags=re.MULTILINE | re.DOTALL
             )
-
+            
             self._metadata = self._metadata.group(1)
-            self._valid = True
+            self._valid = True            
             return True
-        except:
+        except Exception as err:
+            print("Error:{}".format(err))
             return False
 
-    def thread_func(self, cmd):
+    def do_ffmpeg(self, cmd):
         while self.m_running:
             try:
                 if self.m_proc is None:
@@ -76,6 +77,21 @@ class VideoRtspInspector(VideoInspector):
                 print("command:{}, Error:{}".format(cmd, err))
                 pass
 
+    def do_ffprobe(self, cmd):
+        self.m_proc = subprocess.Popen(cmd
+                                        , stdout=subprocess.PIPE
+                                        , stderr=subprocess.STDOUT)
+        self.m_pid = None if self.m_proc is None else self.m_proc.pid
+
+        output, unused_err = self.m_proc.communicate()
+        self.analyze(output)
+
+    def thread_func(self, cmd):
+        if "ffprobe" in cmd:
+            self.do_ffprobe(cmd)
+        else:
+            self.do_ffmpeg(cmd)
+
         # wakeup
         self.m_readyEvent.set()
 
@@ -91,13 +107,21 @@ class VideoRtspInspector(VideoInspector):
 
     def setUp(self, rtsp_transport, video_source, format, output, ffmpeg_bin="ffmpeg"):
         self.m_source = video_source
-        cmd = "%s -rtsp_transport %s -i %s -codec copy -f %s %s " % (
-            ffmpeg_bin,
-            rtsp_transport,
-            video_source,
-            format,
-            output
-        )
+
+        if ffmpeg_bin == "ffprobe":
+            cmd = "%s -rtsp_transport %s -i %s" % (
+                ffmpeg_bin,
+                rtsp_transport,
+                video_source
+            )
+        else:
+            cmd = "%s -rtsp_transport %s -i %s -codec copy -f %s %s " % (
+                ffmpeg_bin,
+                rtsp_transport,
+                video_source,
+                format,
+                output
+            )
 
         self.m_running = True
         self.m_thread = threading.Thread(target=self.thread_func, args=(cmd,))

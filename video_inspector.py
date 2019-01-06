@@ -196,21 +196,29 @@ class VideoInspector(object):
         m = re.search("\n\s*Stream.*Audio:.*\n", self._exec_response)
         if m:
             return m.group(0).strip()
-        return
+        return None
 
     def _audio_match(self):
         if not self._valid:
-            return
-        return re.search(
-            "Stream\s*(.*?)[,|:|\(|\[].*?\s*Audio:\s*(.*?),\s*([0-9\.]*) "
-            "(\w*),\s*([a-zA-Z:]*)",
-            self.audio_stream()
-        )
+            return None
+        stream = self.audio_stream()
+        if stream:
+            return re.search(
+                "Stream\s*(.*?)[,|:|\(|\[].*?\s*Audio:\s*(.*?),\s*([0-9\.]*) "
+                "(\w*),\s*([a-zA-Z:]*)",
+                stream
+            )
+        else:
+            return None
 
     def audio_codec(self):
         if not self._valid:
-            return
-        return self._audio_match().group(2)
+            return None
+        audio_info = self._audio_match()
+        if audio_info:
+            return audio_info.group(2)
+        else:
+            return None
 
     def audio_sample_rate(self):
         if not self._valid:
