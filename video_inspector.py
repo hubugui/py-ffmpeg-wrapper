@@ -16,6 +16,9 @@ class VideoInspector(object):
     def __init__(self):
         self._valid = False
 
+    def setValid(self, value):
+        self._valid = value
+
     def setUp(self, video_source, ffmpeg_bin="ffmpeg"):
         self.filename = os.path.basename(video_source)
         self.path = os.path.dirname(video_source)
@@ -201,7 +204,7 @@ class VideoInspector(object):
     def _audio_match(self):
         if not self._valid:
             return None
-        stream = self.audio_stream()
+        stream = self.audio_stream()        
         if stream:
             return re.search(
                 "Stream\s*(.*?)[,|:|\(|\[].*?\s*Audio:\s*(.*?),\s*([0-9\.]*) "

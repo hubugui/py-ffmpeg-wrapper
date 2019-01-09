@@ -18,6 +18,13 @@ from errors import InputFileDoesNotExist
 from video_inspector import VideoInspector
 
 class VideoRtspInspector(VideoInspector):
+    def __init__(self):
+        super(VideoRtspInspector, self).__init__()
+        self.m_running = True
+        self.m_proc = None
+        self.m_readyEvent = threading.Event()
+        self.m_output = []
+
     def setUserdata(self, userdata):
         self.m_userdata = userdata
 
@@ -42,12 +49,12 @@ class VideoRtspInspector(VideoInspector):
                 self._exec_response,
                 flags=re.MULTILINE | re.DOTALL
             )
-            
+
             self._metadata = self._metadata.group(1)
-            self._valid = True            
+            self.setValid(True)
             return True
         except Exception as err:
-            print("Error:{}".format(err))
+            print("Source:{}, Error:{}".format(self.m_source, err))
             return False
 
     def do_ffmpeg(self, cmd):
@@ -82,8 +89,7 @@ class VideoRtspInspector(VideoInspector):
                                         , stdout=subprocess.PIPE
                                         , stderr=subprocess.STDOUT)
         self.m_pid = None if self.m_proc is None else self.m_proc.pid
-
-        output, unused_err = self.m_proc.communicate()
+        output, _ = self.m_proc.communicate()
         self.analyze(output)
 
     def thread_func(self, cmd):
@@ -94,13 +100,6 @@ class VideoRtspInspector(VideoInspector):
 
         # wakeup
         self.m_readyEvent.set()
-
-    def __init__(self):
-        super(VideoRtspInspector, self).__init__()
-        self.m_running = True
-        self.m_proc = None
-        self.m_readyEvent = threading.Event()
-        self.m_output = []
 
     def getSource(self):
         return self.m_source
