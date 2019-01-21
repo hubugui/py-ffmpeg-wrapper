@@ -22,8 +22,12 @@ class VideoRtspInspector(VideoInspector):
         super(VideoRtspInspector, self).__init__()
         self.m_running = True
         self.m_proc = None
+        self.m_pid = None
         self.m_readyEvent = threading.Event()
         self.m_output = []
+        self.m_thread = None
+        self._exec_response = None
+        self._metadata = None
 
     def setUserdata(self, userdata):
         self.m_userdata = userdata
@@ -36,6 +40,9 @@ class VideoRtspInspector(VideoInspector):
 
     def analyze(self, response):
         try:
+            if response is None or len(response) == 0:
+                return False
+        
             self._exec_response = response
             if re.search(
                 ".*command\snot\sfound",
@@ -48,8 +55,8 @@ class VideoRtspInspector(VideoInspector):
                 "(Input \#.*)\n",
                 self._exec_response,
                 flags=re.MULTILINE | re.DOTALL
-            )
-
+            )            
+            
             self._metadata = self._metadata.group(1)
             self.setValid(True)
             return True
@@ -76,7 +83,7 @@ class VideoRtspInspector(VideoInspector):
                     except:
                         None
                     self.m_output.append(chr)
-                    if chr == '\n':                        
+                    if chr == '\n':
                         output = ''.join(self.m_output)
                         if "Press [q] to stop" in output and self.analyze(output):                            
                             break
@@ -84,12 +91,27 @@ class VideoRtspInspector(VideoInspector):
                 print("command:{}, Error:{}".format(cmd, err))
                 pass
 
-    def do_ffprobe(self, cmd):
-        self.m_proc = subprocess.Popen(cmd
-                                        , stdout=subprocess.PIPE
-                                        , stderr=subprocess.STDOUT)
-        self.m_pid = None if self.m_proc is None else self.m_proc.pid
-        output, _ = self.m_proc.communicate()
+    def do_ffprobe(self, cmd):        
+        proc = subprocess.Popen(cmd
+                                , stdout=subprocess.PIPE
+                                , stderr=subprocess.STDOUT
+                                , bufsize=1)
+        pid = None if proc is None else proc.pid
+        self.m_proc = proc
+        output = []
+        
+        while True:
+            # here maybe block, so tearDown() call terminate()
+            try:
+                chr = proc.stdout.read(1)
+                if chr == '' and proc.poll() != None:
+                    break
+            except Exception as err:
+                print(err)
+                break
+            output.append(chr)
+
+        output = ''.join(output)        
         self.analyze(output)
 
     def thread_func(self, cmd):
@@ -123,11 +145,11 @@ class VideoRtspInspector(VideoInspector):
             )
 
         self.m_running = True
-        self.m_thread = threading.Thread(target=self.thread_func, args=(cmd,))
+        self.m_thread = threading.Thread(target=self.thread_func, args=(cmd,))        
         self.m_thread.start()
 
     def tearDown(self):
-        self.m_running = False    
+        self.m_running = False
         if self.m_proc is not None:
             self.m_proc.terminate()
             self.m_pid = self.m_proc = None
